@@ -1,6 +1,5 @@
 package com.example.dicegame.utils
 
-import com.example.dicegame.data.GameState
 import kotlin.random.Random
 
 /**

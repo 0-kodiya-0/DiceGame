@@ -21,10 +21,10 @@ object GameState {
     var computerCurrentRollScore by mutableStateOf(0)
 
     // Current dice values for human player (1-6 for each die)
-    var humanDice by mutableStateOf(listOf(1, 1, 1, 1, 1))
+    var humanDice by mutableStateOf(listOf(0, 0, 0, 0, 0))
 
     // Current dice values for computer player (1-6 for each die)
-    var computerDice by mutableStateOf(listOf(1, 1, 1, 1, 1))
+    var computerDice by mutableStateOf(listOf(0, 0, 0, 0, 0))
 
     // Dice selection status for human player (true = keep, false = reroll)
     var humanDiceSelection by mutableStateOf(List(5) { false })
@@ -47,6 +47,9 @@ object GameState {
     var humanAttempts by mutableStateOf(0)
     var computerAttempts by mutableStateOf(0)
 
+    // Flag to track if game is currently in progress
+    var isGameInProgress by mutableStateOf(false)
+
     /**
      * Reset game state for a new game
      */
@@ -59,6 +62,17 @@ object GameState {
         isTieBreaker = false
         humanAttempts = 0
         computerAttempts = 0
+        isGameInProgress = true
+    }
+
+    /**
+     * Cancel the current game without declaring a winner
+     * but preserve the current game state for later continuation
+     */
+    fun cancelGame() {
+        // Don't mark as game over, just set isGameInProgress to false
+        // to indicate the user has left the game (but can resume later)
+        isGameInProgress = false
     }
 
     /**
@@ -67,8 +81,8 @@ object GameState {
     fun resetTurn() {
         humanCurrentRollScore = 0
         computerCurrentRollScore = 0
-        humanDice = List(5) { 1 }
-        computerDice = List(5) { 1 }
+        humanDice = List(5) { 0 }
+        computerDice = List(5) { 0 }
         humanDiceSelection = List(5) { false }
         currentRollCount = 0
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.dicegame.R
@@ -34,15 +34,16 @@ fun DiceView(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Get the appropriate dice resource based on value
+    val darkTheme: Boolean = isSystemInDarkTheme()
+
     val diceResource = when (value) {
-        1 -> R.drawable.dice_1
-        2 -> R.drawable.dice_2
-        3 -> R.drawable.dice_3
-        4 -> R.drawable.dice_4
-        5 -> R.drawable.dice_5
-        6 -> R.drawable.dice_6
-        else -> R.drawable.dice_1 // Default to 1 if invalid value
+        1 -> if (darkTheme) R.drawable.dice_1_light else R.drawable.dice_1_dark
+        2 -> if (darkTheme) R.drawable.dice_2_light else R.drawable.dice_2_dark
+        3 -> if (darkTheme) R.drawable.dice_3_light else R.drawable.dice_3_dark
+        4 -> if (darkTheme) R.drawable.dice_4_light else R.drawable.dice_4_dark
+        5 -> if (darkTheme) R.drawable.dice_5_light else R.drawable.dice_5_dark
+        6 -> if (darkTheme) R.drawable.dice_6_light else R.drawable.dice_6_dark
+        else -> null // Default to 1 if invalid value
     }
 
     // Selection highlight modifier
@@ -71,6 +72,7 @@ fun DiceView(
             .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
+        if (diceResource !== null)
         Image(
             painter = painterResource(id = diceResource),
             contentDescription = "Dice showing $value",

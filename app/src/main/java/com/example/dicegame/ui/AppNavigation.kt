@@ -2,7 +2,6 @@ package com.example.dicegame.ui
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.example.dicegame.data.GameState
 import com.example.dicegame.ui.screens.*
 
 // Global variable to persist screen state across configuration changes
@@ -26,9 +25,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         AppScreen.Home -> HomeScreen(
             onNavigate = { screen ->
                 // If starting a new game, reset the game state
-                if (screen == AppScreen.Playground) {
-                    GameState.resetGame()
-                }
+
                 currentScreen = screen
             },
             modifier = modifier
