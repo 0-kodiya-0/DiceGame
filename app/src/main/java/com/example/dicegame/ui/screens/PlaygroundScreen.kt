@@ -1,7 +1,6 @@
 package com.example.dicegame.ui.screens
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,17 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -30,16 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.dicegame.R
 import com.example.dicegame.data.GameState
-import com.example.dicegame.ui.components.DiceView
+import com.example.dicegame.ui.components.*
 import com.example.dicegame.utils.DiceUtils
 import kotlinx.coroutines.launch
 
@@ -99,22 +85,12 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     // Function to execute force end game
     fun executeForceEndGame() {
-        // Determine winner based on current scores
-        if (humanScore.value > computerScore.value) {
-            GameState.winner = "human"
-            GameState.humanWins++
-        } else if (computerScore.value > humanScore.value) {
-            GameState.winner = "computer"
-            GameState.computerWins++
-        } else {
-            // In case of a tie, consider it a draw (no one gets a win)
-            GameState.winner = "draw"
-        }
-
         GameState.isGameOver = true
         GameState.isGameInProgress = false
-        showWinDialog.value = true
+        showWinDialog.value = false
         showConfirmEndGameDialog.value = false
+
+        onBack()
     }
 
     // Function to exit game while preserving the current state
@@ -355,140 +331,33 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // Win dialog - shown in both orientations
-    if (showWinDialog.value) {
-        AlertDialog(
-            onDismissRequest = { /* Dialog is not dismissible by clicking outside */ },
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (GameState.winner != "draw") {
-                        Image(
-                            painter = painterResource(
-                                id = if (GameState.winner == "human")
-                                    R.drawable.win
-                                else R.drawable.lose
-                            ),
-                            contentDescription = if (GameState.winner == "human") "Win" else "Lose",
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(end = 16.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                    Text(
-                        text = when (GameState.winner) {
-                            "human" -> "You Win!"
-                            "computer" -> "You Lose"
-                            else -> "Game Draw"
-                        },
-                        color = when (GameState.winner) {
-                            "human" -> MaterialTheme.colorScheme.primary
-                            "computer" -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.secondary
-                        },
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-            },
-            text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Final Score: ${humanScore.value}-${computerScore.value}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    Text(
-                        text = "Attempts: ${GameState.humanAttempts}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showWinDialog.value = false
-                        GameState.resetGame()  // Reset game state when returning to home
-                        onBack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Back to Home")
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
+    // Dialogs
+    GameResultDialog(
+        showDialog = showWinDialog.value,
+        humanScore = humanScore.value,
+        computerScore = computerScore.value,
+        onDismiss = {
+            showWinDialog.value = false
+            GameState.resetGame()
+            onBack()
+        }
+    )
 
-    // Confirm Exit Dialog
-    if (showConfirmExitDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showConfirmExitDialog.value = false },
-            title = { Text("Leave Game?") },
-            text = {
-                Text(
-                    "The current game is still in progress. If you leave now, your progress will be preserved and you can continue later."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { abandonGame() }
-                ) {
-                    Text("Leave & Save")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showConfirmExitDialog.value = false }
-                ) {
-                    Text("Continue Playing")
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
+    ConfirmExitDialog(
+        showDialog = showConfirmExitDialog.value,
+        onConfirm = { abandonGame() },
+        onDismiss = { showConfirmExitDialog.value = false }
+    )
 
-    // Confirm End Game Dialog
-    if (showConfirmEndGameDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showConfirmEndGameDialog.value = false },
-            title = { Text("End Game?") },
-            text = {
-                Text(
-                    "Are you sure you want to end the current game? The player with the highest score will be declared the winner."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = { executeForceEndGame() }
-                ) {
-                    Text("End Game")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showConfirmEndGameDialog.value = false }
-                ) {
-                    Text("Continue Playing")
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(16.dp)
-        )
-    }
+    ConfirmEndGameDialog(
+        showDialog = showConfirmEndGameDialog.value,
+        onConfirm = { executeForceEndGame() },
+        onDismiss = { showConfirmEndGameDialog.value = false }
+    )
 }
 
 /**
- * Modern Portrait Layout for the Playground Screen
+ * Refactored Portrait Layout for the Playground Screen
  */
 @Composable
 fun PortraitLayout(
@@ -525,54 +394,13 @@ fun PortraitLayout(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Game Stats Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Wins Counter
-                Text(
-                    text = "H:${GameState.humanWins}/C:${GameState.computerWins}",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-
-                // Target Score
-                Text(
-                    text = "Target: ${GameState.targetScore}",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-
-                // Current Scores
-                Text(
-                    text = "Score: $humanScore-$computerScore",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-            }
+            GameStatsBar(
+                humanScore = humanScore,
+                computerScore = computerScore
+            )
 
             // Tie Breaker Indicator
-            if (isTieBreaker) {
-                Text(
-                    text = "TIE BREAKER - Roll until someone wins!",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            }
+            TieBreakerIndicator(isTieBreaker = isTieBreaker)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -600,82 +428,36 @@ fun PortraitLayout(
             Spacer(modifier = Modifier.weight(1f))
 
             // Roll Counter
-            Text(
-                text = if (isTieBreaker) "Tie Breaker Roll" else "Roll $rollCount/3",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                ),
-                modifier = Modifier.padding(vertical = 8.dp)
+            RollCounter(
+                rollCount = rollCount,
+                isTieBreaker = isTieBreaker
             )
 
             // Action Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = onThrowDice,
-                    enabled = !isRolling &&
-                            !GameState.isGameOver &&
-                            (rollCount < 3 || isTieBreaker),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp)
-                ) {
-                    Text(if (rollCount == 0) "Throw Dice" else "Reroll")
-                }
-
-                Button(
-                    onClick = onScoreDice,
-                    enabled = !isRolling &&
-                            !GameState.isGameOver &&
-                            rollCount > 0 &&
-                            rollCount < 3 &&
-                            !isTieBreaker,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp)
-                ) {
-                    Text("Score")
-                }
-            }
+            GameActionButtons(
+                rollCount = rollCount,
+                isTieBreaker = isTieBreaker,
+                isRolling = isRolling,
+                onThrowDice = onThrowDice,
+                onScoreDice = onScoreDice
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Navigation Buttons Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Back Button
-                Button(
-                    onClick = onBack,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back")
-                }
-
-                // End Game Button
-                Button(
-                    onClick = onEndGame,
-                    enabled = !GameState.isGameOver && (rollCount > 0 || humanScore > 0 || computerScore > 0),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("End Game")
-                }
-            }
+            NavigationButtons(
+                rollCount = rollCount,
+                humanScore = humanScore,
+                computerScore = computerScore,
+                onBack = onBack,
+                onEndGame = onEndGame
+            )
         }
     }
 }
 
 /**
- * Modern Landscape Layout for the Playground Screen
+ * Refactored Landscape Layout for the Playground Screen
  */
 @Composable
 fun LandscapeLayout(
@@ -725,6 +507,7 @@ fun LandscapeLayout(
                     dice = computerDice,
                     isComputer = true,
                     showSum = true,
+                    isLandscape = true,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
@@ -738,135 +521,36 @@ fun LandscapeLayout(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Game Stats
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(12.dp)
-                ) {
-                    // Wins and Target
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "H:${GameState.humanWins}",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                // Game Stats with Landscape layout
+                LandscapeGameStats(
+                    humanScore = humanScore,
+                    computerScore = computerScore,
+                    rollCount = rollCount,
+                    isTieBreaker = isTieBreaker
+                )
 
-                        Text(
-                            text = "Target: ${GameState.targetScore}",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-
-                        Text(
-                            text = "C:${GameState.computerWins}",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-
-                    // Current Scores
-                    Text(
-                        text = "Score: $humanScore-$computerScore",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    // Tie Breaker or Roll Counter
-                    if (isTieBreaker) {
-                        Text(
-                            text = "TIE BREAKER - Roll until someone wins!",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    } else {
-                        Text(
-                            text = "Roll $rollCount/3",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                }
-
-                // Action Buttons
+                // Action Buttons in Column
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
-                        onClick = onThrowDice,
-                        enabled = !isRolling &&
-                                !GameState.isGameOver &&
-                                (rollCount < 3 || isTieBreaker),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Text(if (rollCount == 0) "Throw Dice" else "Reroll")
-                    }
-
-                    Button(
-                        onClick = onScoreDice,
-                        enabled = !isRolling &&
-                                !GameState.isGameOver &&
-                                rollCount > 0 &&
-                                rollCount < 3 &&
-                                !isTieBreaker,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    ) {
-                        Text("Score")
-                    }
+                    // Throw/Reroll Button
+                    GameActionButtons(
+                        rollCount = rollCount,
+                        isTieBreaker = isTieBreaker,
+                        isRolling = isRolling,
+                        onThrowDice = onThrowDice,
+                        onScoreDice = onScoreDice
+                    )
 
                     // Navigation Buttons Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Back Button
-                        Button(
-                            onClick = onBack,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Back")
-                        }
-
-                        // End Game Button
-                        Button(
-                            onClick = onEndGame,
-                            enabled = !GameState.isGameOver && (rollCount > 0 || humanScore > 0 || computerScore > 0),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("End Game")
-                        }
-                    }
+                    NavigationButtons(
+                        rollCount = rollCount,
+                        humanScore = humanScore,
+                        computerScore = computerScore,
+                        onBack = onBack,
+                        onEndGame = onEndGame
+                    )
                 }
             }
 
@@ -887,69 +571,10 @@ fun LandscapeLayout(
                     rollCount = rollCount,
                     isTieBreaker = isTieBreaker,
                     onDiceSelected = onDiceSelected,
+                    isLandscape = true,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-        }
-    }
-}
-
-/**
- * Reusable Dice Section Component
- */
-@Composable
-fun DiceSection(
-    title: String,
-    dice: List<Int>,
-    isComputer: Boolean,
-    showSum: Boolean = false,
-    diceSelection: List<Boolean> = emptyList(),
-    rollCount: Int = 0,
-    isTieBreaker: Boolean = false,
-    onDiceSelected: ((Int) -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            ),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        // Dice Layout
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            dice.forEachIndexed { index, diceValue ->
-                DiceView(
-                    value = diceValue,
-                    isSelected = if (!isComputer) diceSelection[index] else false,
-                    isSelectable = !isComputer &&
-                            rollCount > 0 &&
-                            rollCount < 3 &&
-                            !isTieBreaker,
-                    onClick = { if (!isComputer) onDiceSelected?.invoke(index) }
-                )
-            }
-        }
-
-        // Sum Display
-        if (showSum || !isComputer) {
-            Text(
-                text = "Sum: ${DiceUtils.calculateDiceSum(dice)}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                modifier = Modifier.padding(top = 8.dp)
-            )
         }
     }
 }
