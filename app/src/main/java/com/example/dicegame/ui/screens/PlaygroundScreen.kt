@@ -448,7 +448,7 @@ fun PortraitLayout(
             )
 
             // Tie Breaker Indicator
-            TieBreakerIndicator(isTieBreaker = isTieBreaker)
+//            TieBreakerIndicator(isTieBreaker = isTieBreaker)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -582,6 +582,12 @@ fun LandscapeLayout(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+
+                    RollCounter(
+                        rollCount = rollCount,
+                        isTieBreaker = isTieBreaker
+                    )
+
                     // Throw/Reroll Button
                     GameActionButtons(
                         rollCount = rollCount,

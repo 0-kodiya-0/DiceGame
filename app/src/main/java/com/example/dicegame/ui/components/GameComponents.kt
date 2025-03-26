@@ -250,44 +250,6 @@ fun LandscapeGameStats(
             ),
             modifier = Modifier.padding(vertical = 8.dp)
         )
-
-        // Tie Breaker or Roll Counter
-        if (isTieBreaker) {
-            Text(
-                text = "TIE BREAKER - Roll until someone wins!",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-        } else {
-            Text(
-                text = "Roll $rollCount/3",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            )
-        }
-    }
-}
-
-/**
- * Tie Breaker Indicator Component
- */
-@Composable
-fun TieBreakerIndicator(
-    isTieBreaker: Boolean,
-    modifier: Modifier = Modifier
-) {
-    if (isTieBreaker) {
-        Text(
-            text = "TIE BREAKER - Roll until someone wins!",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.error,
-                fontWeight = FontWeight.Bold
-            ),
-            modifier = modifier.padding(vertical = 8.dp)
-        )
     }
 }
 
