@@ -490,6 +490,81 @@ fun GameResultDialog(
 }
 
 /**
+ * Game Draw Dialog Component
+ * Shows when there's a tie in the game and prompts players to continue with a tie-breaker
+ *
+ * @param showDialog Whether to show the dialog
+ * @param humanScore Current human score
+ * @param computerScore Current computer score
+ * @param onContinue Callback for when the player chooses to continue with a tie-breaker
+ */
+@Composable
+fun GameDrawDialog(
+    showDialog: Boolean,
+    humanScore: Int,
+    computerScore: Int,
+    onContinue: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Dialog is not dismissible by clicking outside */ },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "It's a Tie!",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Current Score: $humanScore-$computerScore",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    Text(
+                        text = "Both players reached the target score in the same number of attempts with the same score.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Text(
+                        text = "Continue with tie-breaker rounds until there's a winner!",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = onContinue,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Continue to Tie-Breaker")
+                }
+            },
+            dismissButton = null,
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+/**
  * Confirm Exit Dialog Component
  */
 @Composable

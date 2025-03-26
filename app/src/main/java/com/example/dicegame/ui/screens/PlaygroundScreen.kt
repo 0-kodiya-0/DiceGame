@@ -36,9 +36,11 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     // Game state variables
     val showWinDialog = remember { mutableStateOf(false) }
+    val showDrawDialog = remember { mutableStateOf(false) } // New state for draw dialog
     val showConfirmExitDialog = remember { mutableStateOf(false) }
     val showConfirmEndGameDialog = remember { mutableStateOf(false) }
     val isRolling = remember { mutableStateOf(false) }
+    var one = remember { mutableStateOf(1) }
 
     // Read from GameState to ensure state is preserved during configuration changes
     val humanScore = remember { mutableStateOf(GameState.humanScore) }
@@ -62,8 +64,11 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         rollCount.value = GameState.currentRollCount
         isTieBreaker.value = GameState.isTieBreaker
 
-        if (GameState.isGameOver) {
+        if (GameState.isGameOver && GameState.winner != "draw") {
             showWinDialog.value = true
+        } else if (GameState.isGameOver && GameState.winner == "draw") {
+            // Handle ongoing draw situation
+            showDrawDialog.value = true
         }
     }
 
@@ -85,6 +90,18 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     // Function to execute force end game
     fun executeForceEndGame() {
+        // Determine winner based on current scores
+        if (humanScore.value > computerScore.value) {
+            GameState.winner = "human"
+            GameState.humanWins++
+        } else if (computerScore.value > humanScore.value) {
+            GameState.winner = "computer"
+            GameState.computerWins++
+        } else {
+            // In case of a tie, consider it a draw
+            GameState.winner = "draw"
+        }
+
         GameState.isGameOver = true
         GameState.isGameInProgress = false
         showWinDialog.value = false
@@ -101,7 +118,19 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         onBack()
     }
 
-    // Game logic functions - defined as separate functions to avoid reference issues
+    // Function to continue after a draw is detected
+    fun continueTieBreaker() {
+        // Set up for tie-breaker rounds
+        GameState.isTieBreaker = true
+        isTieBreaker.value = true
+
+        // Close the draw dialog
+        showDrawDialog.value = false
+
+        // Game is still in progress, not over
+        GameState.isGameOver = false
+        GameState.isGameInProgress = true
+    }
 
     // Function to check for winner and update game state
     fun checkForWinner() {
@@ -126,7 +155,10 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         GameState.isGameInProgress = false
                         showWinDialog.value = true
                     } else {
-                        // Exact tie - go to tie breaker
+                        // Exact tie - show draw dialog and prepare for tie breaker
+                        GameState.winner = "draw"
+                        // Don't mark game as over yet
+                        showDrawDialog.value = true
                         GameState.isTieBreaker = true
                         isTieBreaker.value = true
                     }
@@ -176,9 +208,12 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             GameState.isGameInProgress = false
             showWinDialog.value = true
         } else {
-            // Still tied, continue with another tie breaker roll
+            // Still tied, show draw dialog and continue with another tie breaker roll
             GameState.isTieBreaker = true
             isTieBreaker.value = true
+
+            // Show draw dialog for consecutive ties
+            showDrawDialog.value = true
         }
     }
 
@@ -190,6 +225,8 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         val humanRollScore = DiceUtils.calculateDiceSum(humanDice.value)
         val computerRollScore = DiceUtils.calculateDiceSum(computerDice.value)
 
+        one.value+=1
+
         // Update total scores
         humanScore.value += humanRollScore
         computerScore.value += computerRollScore
@@ -197,6 +234,9 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         // Update GameState
         GameState.humanScore = humanScore.value
         GameState.computerScore = computerScore.value
+
+        println(isTieBreaker.value)
+        println(one.value)
 
         // Increment attempt counters if not in tie breaker
         if (!isTieBreaker.value) {
@@ -214,9 +254,9 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         GameState.humanDiceSelection = humanDiceSelection.value
 
         // If in tie breaker and no winner yet, continue tie breaker
-        if (isTieBreaker.value && !GameState.isGameOver) {
-            checkTieBreakerResult(humanRollScore, computerRollScore)
-        }
+//        if (isTieBreaker.value && !GameState.isGameOver) {
+//            checkTieBreakerResult(humanRollScore, computerRollScore)
+//        }
     }
 
     // Function to throw dice
@@ -341,6 +381,14 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             GameState.resetGame()
             onBack()
         }
+    )
+
+    // New Draw Dialog
+    GameDrawDialog(
+        showDialog = showDrawDialog.value,
+        humanScore = humanScore.value,
+        computerScore = computerScore.value,
+        onContinue = { continueTieBreaker() }
     )
 
     ConfirmExitDialog(
