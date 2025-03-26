@@ -66,16 +66,6 @@ object GameState {
     }
 
     /**
-     * Cancel the current game without declaring a winner
-     * but preserve the current game state for later continuation
-     */
-    fun cancelGame() {
-        // Don't mark as game over, just set isGameInProgress to false
-        // to indicate the user has left the game (but can resume later)
-        isGameInProgress = false
-    }
-
-    /**
      * Reset state for a new turn
      */
     fun resetTurn() {

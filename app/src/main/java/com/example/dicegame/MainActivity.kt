@@ -46,7 +46,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    // No need to save/restore instance state as GameState is a singleton
-    // and will persist across configuration changes
 }

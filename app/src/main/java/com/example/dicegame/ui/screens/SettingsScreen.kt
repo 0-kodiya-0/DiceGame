@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -16,14 +17,16 @@ import com.example.dicegame.data.GameState
 @Composable
 fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     // Load initial target score from GameState
-    var targetScore by remember { mutableStateOf(GameState.targetScore.toString()) }
+    var targetScore by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     val configuration = LocalConfiguration.current
 
     // Save settings function
     val saveSettings = {
-        val parsedScore = targetScore.toIntOrNull()
+        val parsedScore = targetScore?.toIntOrNull()
         when {
             parsedScore == null -> {
                 errorMessage = "Please enter a valid number"
@@ -99,7 +102,7 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
  */
 @Composable
 fun SettingsPortraitLayout(
-    targetScore: String,
+    targetScore: String?,
     onTargetScoreChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
@@ -142,11 +145,11 @@ fun SettingsPortraitLayout(
                 )
 
                 OutlinedTextField(
-                    value = targetScore,
+                    value = targetScore ?: GameState.targetScore.toString(),
                     onValueChange = onTargetScoreChange,
                     label = { Text("Target Score") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(0.7f)
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Text(
@@ -217,7 +220,7 @@ fun SettingsPortraitLayout(
  */
 @Composable
 fun SettingsLandscapeLayout(
-    targetScore: String,
+    targetScore: String?,
     onTargetScoreChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
@@ -262,7 +265,7 @@ fun SettingsLandscapeLayout(
                 )
 
                 OutlinedTextField(
-                    value = targetScore,
+                    value = targetScore ?: GameState.targetScore.toString(),
                     onValueChange = onTargetScoreChange,
                     label = { Text("Target Score") },
                     singleLine = true,

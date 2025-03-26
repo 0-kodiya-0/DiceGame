@@ -34,15 +34,13 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
 
-    // Game state variables
     val showWinDialog = remember { mutableStateOf(false) }
-    val showDrawDialog = remember { mutableStateOf(false) } // New state for draw dialog
+    val showDrawDialog = remember { mutableStateOf(false) }
     val showConfirmExitDialog = remember { mutableStateOf(false) }
     val showConfirmEndGameDialog = remember { mutableStateOf(false) }
     val isRolling = remember { mutableStateOf(false) }
     var one = remember { mutableStateOf(1) }
 
-    // Read from GameState to ensure state is preserved during configuration changes
     val humanScore = remember { mutableStateOf(GameState.humanScore) }
     val computerScore = remember { mutableStateOf(GameState.computerScore) }
     val humanDice = remember { mutableStateOf(GameState.humanDice) }
@@ -51,9 +49,7 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val rollCount = remember { mutableStateOf(GameState.currentRollCount) }
     val isTieBreaker = remember { mutableStateOf(GameState.isTieBreaker) }
 
-    // Update states from GameState on composition
     LaunchedEffect(Unit) {
-        // Mark game as in progress when screen is opened
         GameState.isGameInProgress = true
 
         humanScore.value = GameState.humanScore
@@ -64,61 +60,40 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         rollCount.value = GameState.currentRollCount
         isTieBreaker.value = GameState.isTieBreaker
 
-        if (GameState.isGameOver && GameState.winner != "draw") {
+        if (GameState.isGameOver) {
             showWinDialog.value = true
-        } else if (GameState.isGameOver && GameState.winner == "draw") {
-            // Handle ongoing draw situation
-            showDrawDialog.value = true
         }
     }
 
-    // Function to handle back button press
     fun handleBackPress() {
         if (!GameState.isGameOver && (humanScore.value > 0 || computerScore.value > 0 || rollCount.value > 0)) {
             // Game in progress, show confirmation dialog
             showConfirmExitDialog.value = true
         } else {
-            // No game in progress or game over, safe to exit
             onBack()
         }
     }
 
-    // Function to force end the game
     fun forceEndGame() {
         showConfirmEndGameDialog.value = true
     }
 
-    // Function to execute force end game
     fun executeForceEndGame() {
-        // Determine winner based on current scores
-        if (humanScore.value > computerScore.value) {
-            GameState.winner = "human"
-            GameState.humanWins++
-        } else if (computerScore.value > humanScore.value) {
-            GameState.winner = "computer"
-            GameState.computerWins++
-        } else {
-            // In case of a tie, consider it a draw
-            GameState.winner = "draw"
-        }
-
         GameState.isGameOver = true
         GameState.isGameInProgress = false
         showWinDialog.value = false
+        showDrawDialog.value = false
         showConfirmEndGameDialog.value = false
 
         onBack()
     }
 
-    // Function to exit game while preserving the current state
     fun abandonGame() {
-        // Don't mark the game as canceled, just navigate back
         // This allows the game to be continued later
         showConfirmExitDialog.value = false
         onBack()
     }
 
-    // Function to continue after a draw is detected
     fun continueTieBreaker() {
         // Set up for tie-breaker rounds
         GameState.isTieBreaker = true
@@ -132,16 +107,13 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         GameState.isGameInProgress = true
     }
 
-    // Function to check for winner and update game state
     fun checkForWinner() {
         val humanReachedTarget = humanScore.value >= GameState.targetScore
         val computerReachedTarget = computerScore.value >= GameState.targetScore
 
         if (humanReachedTarget || computerReachedTarget) {
             if (humanReachedTarget && computerReachedTarget) {
-                // Both reached target in same number of attempts
                 if (GameState.humanAttempts == GameState.computerAttempts) {
-                    // Compare scores
                     if (humanScore.value > computerScore.value) {
                         GameState.winner = "human"
                         GameState.humanWins++
@@ -155,22 +127,17 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         GameState.isGameInProgress = false
                         showWinDialog.value = true
                     } else {
-                        // Exact tie - show draw dialog and prepare for tie breaker
-                        GameState.winner = "draw"
-                        // Don't mark game as over yet
                         showDrawDialog.value = true
                         GameState.isTieBreaker = true
                         isTieBreaker.value = true
                     }
                 } else if (GameState.humanAttempts < GameState.computerAttempts) {
-                    // Human reached target in fewer attempts
                     GameState.winner = "human"
                     GameState.humanWins++
                     GameState.isGameOver = true
                     GameState.isGameInProgress = false
                     showWinDialog.value = true
                 } else {
-                    // Computer reached target in fewer attempts
                     GameState.winner = "computer"
                     GameState.computerWins++
                     GameState.isGameOver = true
@@ -193,31 +160,6 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // Function to check tie breaker result
-    fun checkTieBreakerResult(humanRollScore: Int, computerRollScore: Int) {
-        if (humanRollScore > computerRollScore) {
-            GameState.winner = "human"
-            GameState.humanWins++
-            GameState.isGameOver = true
-            GameState.isGameInProgress = false
-            showWinDialog.value = true
-        } else if (computerRollScore > humanRollScore) {
-            GameState.winner = "computer"
-            GameState.computerWins++
-            GameState.isGameOver = true
-            GameState.isGameInProgress = false
-            showWinDialog.value = true
-        } else {
-            // Still tied, show draw dialog and continue with another tie breaker roll
-            GameState.isTieBreaker = true
-            isTieBreaker.value = true
-
-            // Show draw dialog for consecutive ties
-            showDrawDialog.value = true
-        }
-    }
-
-    // Function to score the current roll
     fun scoreRoll() {
         if (GameState.isGameOver) return
 
@@ -252,14 +194,8 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         GameState.currentRollCount = 0
         humanDiceSelection.value = List(5) { false }
         GameState.humanDiceSelection = humanDiceSelection.value
-
-        // If in tie breaker and no winner yet, continue tie breaker
-//        if (isTieBreaker.value && !GameState.isGameOver) {
-//            checkTieBreakerResult(humanRollScore, computerRollScore)
-//        }
     }
 
-    // Function to throw dice
     fun throwDice() {
         if (isRolling.value || GameState.isGameOver) return
 
@@ -286,7 +222,6 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                     computerDice.value,
                     rollCount.value,
                     computerScore.value,
-                    humanScore.value,
                     GameState.targetScore
                 )
 
@@ -320,7 +255,6 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // Toggle dice selection for reroll
     fun toggleDiceSelection(index: Int) {
         if (rollCount.value > 0 && rollCount.value < 3 && !isTieBreaker.value) {
             val newSelection = humanDiceSelection.value.toMutableList()
@@ -371,7 +305,6 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // Dialogs
     GameResultDialog(
         showDialog = showWinDialog.value,
         humanScore = humanScore.value,
@@ -383,7 +316,6 @@ fun PlaygroundScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         }
     )
 
-    // New Draw Dialog
     GameDrawDialog(
         showDialog = showDrawDialog.value,
         humanScore = humanScore.value,
@@ -441,18 +373,13 @@ fun PortraitLayout(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Game Stats Row
             GameStatsBar(
                 humanScore = humanScore,
                 computerScore = computerScore
             )
 
-            // Tie Breaker Indicator
-//            TieBreakerIndicator(isTieBreaker = isTieBreaker)
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Computer Dice Section
             DiceSection(
                 title = "Computer's Dice",
                 dice = computerDice,
@@ -462,7 +389,6 @@ fun PortraitLayout(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Human Dice Section
             DiceSection(
                 title = "Your Dice${if (rollCount > 0 && rollCount < 3) " (tap to select)" else ""}",
                 dice = humanDice,
@@ -475,13 +401,11 @@ fun PortraitLayout(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Roll Counter
             RollCounter(
                 rollCount = rollCount,
                 isTieBreaker = isTieBreaker
             )
 
-            // Action Buttons
             GameActionButtons(
                 rollCount = rollCount,
                 isTieBreaker = isTieBreaker,
@@ -492,7 +416,6 @@ fun PortraitLayout(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Navigation Buttons Row
             NavigationButtons(
                 rollCount = rollCount,
                 humanScore = humanScore,
@@ -541,7 +464,6 @@ fun LandscapeLayout(
             modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left Side - Computer Dice
             Box(
                 modifier = Modifier
                     .weight(0.3f)
@@ -560,7 +482,6 @@ fun LandscapeLayout(
                 )
             }
 
-            // Center - Game Controls and Stats
             Column(
                 modifier = Modifier
                     .weight(0.4f)
@@ -569,15 +490,11 @@ fun LandscapeLayout(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
-                // Game Stats with Landscape layout
                 LandscapeGameStats(
                     humanScore = humanScore,
-                    computerScore = computerScore,
-                    rollCount = rollCount,
-                    isTieBreaker = isTieBreaker
+                    computerScore = computerScore
                 )
 
-                // Action Buttons in Column
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -588,7 +505,6 @@ fun LandscapeLayout(
                         isTieBreaker = isTieBreaker
                     )
 
-                    // Throw/Reroll Button
                     GameActionButtons(
                         rollCount = rollCount,
                         isTieBreaker = isTieBreaker,
@@ -597,7 +513,6 @@ fun LandscapeLayout(
                         onScoreDice = onScoreDice
                     )
 
-                    // Navigation Buttons Row
                     NavigationButtons(
                         rollCount = rollCount,
                         humanScore = humanScore,
@@ -608,7 +523,6 @@ fun LandscapeLayout(
                 }
             }
 
-            // Right Side - Human Dice
             Box(
                 modifier = Modifier
                     .weight(0.3f)

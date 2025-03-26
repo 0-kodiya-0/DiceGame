@@ -44,36 +44,16 @@ object DiceUtils {
     }
 
     /**
-     * Generate a random decision for computer player to reroll or not
-     * @return true if computer decides to reroll, false otherwise
-     */
-    fun shouldComputerReroll(): Boolean {
-        // Random strategy - 70% chance to reroll on first roll, 50% on second roll
-        return Random.nextDouble() < 0.6
-    }
-
-    /**
-     * Decide which dice the computer should keep (true) or reroll (false)
-     * @param dice Current computer dice values
-     * @return Boolean list where true means keep, false means reroll
-     */
-    fun computerSelectDiceToKeep(dice: List<Int>): List<Boolean> {
-        // Simple strategy: keep dice with values of 4 or higher
-        return dice.map { it >= 4 }
-    }
-
-    /**
      * An enhanced strategy for computer player
      *
      * This strategy implements a more intelligent approach by:
-     * - Keeping high value dice (5s and 6s)
+     * - Keeping high value dice (5 and 6)
      * - Making decisions based on current score
      * - Adapting strategy based on roll count
      *
      * @param currentDice Current dice values
      * @param rollCount Current roll count (0-2)
      * @param computerScore Current computer score
-     * @param humanScore Current human score
      * @param targetScore Target score to win
      * @return Pair of (shouldReroll, diceToKeep)
      */
@@ -81,7 +61,6 @@ object DiceUtils {
         currentDice: List<Int>,
         rollCount: Int,
         computerScore: Int,
-        humanScore: Int,
         targetScore: Int
     ): Pair<Boolean, List<Boolean>> {
         // Calculate current sum
@@ -114,10 +93,10 @@ object DiceUtils {
             // If we're not rerolling, keep all dice
             !shouldReroll -> List(5) { true }
 
-            // First roll - only keep 5s and 6s
+            // First roll - only keep 5 and 6
             rollCount == 0 -> currentDice.map { it >= 5 }
 
-            // Second roll - keep 4s, 5s, and 6s
+            // Second roll - keep 4, 5, and 6
             else -> currentDice.map { it >= 4 }
         }
 
@@ -133,13 +112,13 @@ object DiceUtils {
      * Key aspects of the strategy:
      *
      * 1. Value-based dice retention:
-     *    - Always keep high-value dice (5s and 6s)
-     *    - On later rolls, keep medium-value dice (4s)
-     *    - Almost always reroll low-value dice (1s, 2s, 3s)
+     *    - Always keep high-value dice (5 and 6)
+     *    - On later rolls, keep medium-value dice (4)
+     *    - Almost always reroll low-value dice (1, 2, 3)
      *
      * 2. Roll-count adaptation:
-     *    - First roll: More aggressive, keep only 5s and 6s
-     *    - Second roll: More conservative, keep 4s, 5s, and 6s
+     *    - First roll: More aggressive, keep only 5 and 6
+     *    - Second roll: More conservative, keep 4, 5, and 6
      *    - Third roll: Must keep all (per game rules)
      *
      * 3. Score-awareness:

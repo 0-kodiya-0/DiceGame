@@ -52,19 +52,15 @@ fun HomeScreen(onNavigate: (AppScreen) -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // Function to start a new game
     fun startNewGame() {
         GameState.resetGame()
         onNavigate(AppScreen.Playground)
     }
 
-    // Function to continue an existing game
     fun continueGame() {
-        // Don't reset the game, just navigate to the playground
         onNavigate(AppScreen.Playground)
     }
 
-    // Choose layout based on orientation
     when (configuration.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
             HomeLandscapeLayout(
@@ -92,10 +88,9 @@ fun HomeScreen(onNavigate: (AppScreen) -> Unit, modifier: Modifier = Modifier) {
         }
     }
 
-    // About dialog - shown in both orientations
     if (showAboutDialog) {
         AboutDialog(
-            studentId = "w2052292",
+            studentId = "20222284 / w2052292",
             studentName = "Sanithu Jayakody",
             onDismiss = { showAboutDialog = false }
         )

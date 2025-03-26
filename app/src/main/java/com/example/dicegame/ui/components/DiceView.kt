@@ -20,6 +20,7 @@ import com.example.dicegame.R
 
 /**
  * Composable for displaying a single die
+ *
  * @param value The value of the die (1-6)
  * @param isSelected Whether the die is selected for keeping
  * @param isSelectable Whether the die can be selected
@@ -43,7 +44,7 @@ fun DiceView(
         4 -> if (darkTheme) R.drawable.dice_4_light else R.drawable.dice_4_dark
         5 -> if (darkTheme) R.drawable.dice_5_light else R.drawable.dice_5_dark
         6 -> if (darkTheme) R.drawable.dice_6_light else R.drawable.dice_6_dark
-        else -> null // Default to 1 if invalid value
+        else -> null
     }
 
     // Selection highlight modifier

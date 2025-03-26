@@ -3,13 +3,9 @@ package com.example.dicegame.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +70,6 @@ fun DiceSection(
                 val firstRow = dice.take(3)
                 val secondRow = dice.drop(3).take(2)
 
-                // First row of dice
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -93,7 +87,6 @@ fun DiceSection(
                     }
                 }
 
-                // Second row of dice
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -131,7 +124,6 @@ fun DiceSection(
             }
         }
 
-        // Sum Display
         if (showSum || !isComputer) {
             Text(
                 text = "Sum: ${DiceUtils.calculateDiceSum(dice)}",
@@ -199,8 +191,6 @@ fun GameStatsBar(
 fun LandscapeGameStats(
     humanScore: Int,
     computerScore: Int,
-    rollCount: Int,
-    isTieBreaker: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -216,6 +206,7 @@ fun LandscapeGameStats(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Human wins Counter
             Text(
                 text = "H:${GameState.humanWins}",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -224,6 +215,7 @@ fun LandscapeGameStats(
                 )
             )
 
+            // Target Score
             Text(
                 text = "Target: ${GameState.targetScore}",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -232,6 +224,7 @@ fun LandscapeGameStats(
                 )
             )
 
+            // Computer wins Counter
             Text(
                 text = "C:${GameState.computerWins}",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -317,17 +310,6 @@ fun GameActionButtons(
 
 /**
  * Navigation Buttons Component that provides back and end game functionality
- *
- * @param rollCount Current roll count to determine if the game is in progress
- * @param humanScore Current human score to determine if the game is in progress
- * @param computerScore Current computer score to determine if the game is in progress
- * @param onBack Callback for when back button is clicked
- * @param onEndGame Callback for when end game button is clicked
- * @param backButtonText Text to display on the back button (default: "Back")
- * @param endGameButtonText Text to display on the end game button (default: "End Game")
- * @param isEndGameEnabled Whether the end game button should be enabled
- * @param horizontalArrangement Arrangement of the buttons (default: spacedBy(8.dp))
- * @param modifier Modifier for styling and layout
  */
 @Composable
 fun NavigationButtons(
@@ -454,11 +436,6 @@ fun GameResultDialog(
 /**
  * Game Draw Dialog Component
  * Shows when there's a tie in the game and prompts players to continue with a tie-breaker
- *
- * @param showDialog Whether to show the dialog
- * @param humanScore Current human score
- * @param computerScore Current computer score
- * @param onContinue Callback for when the player chooses to continue with a tie-breaker
  */
 @Composable
 fun GameDrawDialog(
@@ -569,11 +546,6 @@ fun ConfirmExitDialog(
  *
  * This dialog confirms if the user wants to end the current game.
  * It handles both the UI presentation and the user interaction callbacks.
- *
- * @param showDialog Boolean flag to control dialog visibility
- * @param onConfirm Callback function when user confirms ending the game
- * @param onDismiss Callback function when user dismisses the dialog
- * @param modifier Optional Modifier for additional styling
  */
 @Composable
 fun ConfirmEndGameDialog(
